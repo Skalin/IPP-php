@@ -62,12 +62,17 @@ class Parser {
 			$file = file($formatFile);
 
 			foreach ($file as $line) {
-				$formats = preg_split("/( ,|\s|\t)+/", $line);
-				array_pop($formats);
-				foreach ($formats as $format) {
+				if ((preg_match("/([\w\d\.\|\!\%\*\+\(\)]+[\t]+[\w\d,: \t]+)/",$line)) == 1) {
+
+				} else {
+					$common->exception(2, "formatFile", true);
+				}
+				//array_pop($formats);
+				/*foreach ($formats as $format) {
 					echo $format."\n";
 
-				}
+				}*/
+				var_dump($formats);
 			}
 
 			//regexChecker($string);
