@@ -15,7 +15,7 @@
 	$flags = array("if" => false, "of" => false, "ff" => false, "br" => false);
 	$files = array("inputFile" => "stdin", "outputFile" => "stdout", "formatFile" => "none");
 
-		// we will now check for arguments validity]
+		// we will now check for arguments validity and then we'll check for integrity of all files
 		$common->checkArguments($argv);
 
 		// shortcuts for array access
@@ -33,6 +33,7 @@
 		$editor->insertNewLine($common, $oFile);
 
 		//var_dump($files);
+        echo "-------------------------------------------------";
 		echo "\nEnd of the script\n";
 		//echo $files["formatFile"]."\n";
 		//var_dump($flags);

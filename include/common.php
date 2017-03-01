@@ -12,12 +12,9 @@
 		 * the function will exit script with code 1
 		 * @param array $argv An array of arguments passed to script
 		 */
-		public function checkArguments($argv)
-		{
+		public function checkArguments($argv) {
 
-			global $flags;
-			global $files;
-			global $argCount;
+		    global $argCount, $flags, $files;
 
 			if ($argCount < 2) {
 				$this->exception(1, "amount", true);
@@ -67,11 +64,12 @@
 				} else {
 					$this->exception(1, "combination", true);
 				}
+                $this->checkAllFiles($files);
 			}
 		}
 
 		public function checkAllFiles($files) {
-			if ($files["inputFle"] != "stdin") {
+			if ($files["inputFile"] != "stdin") {
 				if (!file_exists($files["inputFile"])) {
 					$this->exception(2, "file", true);
 				}
@@ -96,26 +94,25 @@
 		 * @param $errorText String Depending on this value function selects which type i will echo
 		 * @param $echo Bool value selects whether to echo error or not.
 		 */
-		public function exception($errorCode, $errorText, $echo)
-		{
-			global $files;
-			global $flags;
-			if ($echo == true) {
+		public function exception($errorCode, $errorText, $echo) {
+		    global $fileName, $files, $flags;
 
-				global $fileName;
+		    if ($echo == true) {
 
 				echo "ERROR: ";
 				if ($errorText == "combination") {
 					echo "Wrong combination of parameters!";
 				} else if ($errorText == "amount") {
 					echo "Wrong amount of arguments passed!";
-				} else if ($errorText = "file") {
+				} else if ($errorText == "file") {
 					echo "Couldn't open or missing file!";
-				}
+				} else if ($errorText == "formatFile") {
+				    echo "Wrong format of the formatting file!";
+                }
 				echo " Use: " . $fileName . " --help\n";
 			}
-			var_dump($flags);
-			var_dump($files);
+			//var_dump($flags);
+            //var_dump($files);
 			exit($errorCode);
 		}
 
@@ -126,40 +123,15 @@
 		public function getFile($file)
 		{
 			if (!file_exists($file)) {
-				$this->exception(2, "file", false);
+				$this->exception(2, "file", true);
 			} else {
-				$ff = file_get_contents($file);
+				$ff = file($file);
 				if ($ff == false) {
-					$this->exception(2, "file", false);
+					$this->exception(2, "file", true);
 				}
 				return $ff;
 			}
 			return false;
-		}
-
-
-		/**
-		 * Function automatically checks for file integrity and file existence
-		 * after that tries to open the file and returns it, otherwise returns 0
-		 * @param $file
-		 * @param $type
-		 * @return $ff Opened file
-		 */
-		public function openFile($file, $type)
-		{
-			if (!file_exists($file)) {
-				$this->exception(2, "file", true);
-			} else {
-				if ($type == "r") {
-					$ff = fopen($file, "r");
-				} else if ($type == "w") {
-					$ff = fopen($file, "w");
-				} else {
-					$ff = fopen($file, "w+");
-				}
-				return $ff;
-			}
-			return 0;
 		}
 
 		/**
@@ -184,7 +156,7 @@
 			echo "--help\t\tCan be used only when no other arguments are passed.
 		Prints this help message\n";
 			echo "--br\t\tCan be used with any other argument except for --help.
-		At the end of the script, it will replace every \"\\n\" with \"<br />\".\n";
+		At the end of the script, it will insert a \"<br />\" after every \\n.\n";
 			echo "--format=FILE\tCan be used with any other argument except for --help.
 		Specifies the formatting of input file. If no file is included,
 		returns unchanged input file.\n";
