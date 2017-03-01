@@ -24,7 +24,7 @@ class Parser
     {
         $array = str_split($string, 1);
         foreach ($array as $regex) {
-            echo $regex."\n";
+           // echo $regex."\n";
         }
         echo "\n\n\n";
         return $string;
@@ -36,30 +36,29 @@ class Parser
      */
     private function parseTag(Common $common, $tag, $preString, $postString)
     {
-        if ($tag == "bold") {
+        if ((preg_match("/^(bold)$/", $tag)) == 1) {
             $preString = $preString."<b>";
             $postString = $postString."</b>";
-        } else if ($tag == "italic") {
+        } else if ((preg_match("/^(italic)$/", $tag)) == 1) {
             $preString = $preString."<i>";
             $postString = $postString."</i>";
-        } else if ($tag == "underline") {
+        } else if ((preg_match("/^(underline)$/", $tag)) == 1) {
             $preString = $preString . "<u>";
             $postString = $postString . "</u>";
-        } else if ($tag == "teletype") {
+        } else if ((preg_match("/^(teletype)$/", $tag)) == 1) {
                 $preString = $preString."<tt>";
                 $postString = $postString."</tt>";
-        } else if (((preg_match("/(color:[a-fA-F0-9]{6})$/", $tag)) == 1) || ((preg_match("/(color:[a-fA-F0-9]{3})$/", $tag)) == 1)) {
+        } else if (((preg_match("/^(color:[a-fA-F0-9]{6})$/", $tag)) == 1) || ((preg_match("/^(color:[a-fA-F0-9]{3})$/", $tag)) == 1)) {
             $helpString = substr($tag,6);
             $preString = $preString."<font color=#".$helpString.">";
             $postString = $postString."</font>";
-        } else if (((preg_match("/(size:[1-7]{1})$/", $tag)) == 1)) {
+        } else if (((preg_match("/^(size:[1-7]{1})$/", $tag)) == 1)) {
             $helpString = substr($tag, 5);
             $preString = $preString."<font size=".$helpString.">";
             $postString = $postString."</font>";
         } else {
             $common->exception(3, "formatFile", true);
         }
-
         // remember that prefix for regex is on the 1 position, suffix is on the 2 position
         return $result = array($preString,$postString);
     }
@@ -83,7 +82,9 @@ class Parser
             foreach ($file as $line) {
                 if ((preg_match("/([\w\d\.\|\!\%\*\+\(\)]+[\t]+[\w\d,: \t]+)$/", $line)) == 1) {
                     $formats[$i] = preg_split("/([,\s\t]+)/", $line);
-                    array_pop($formats[$i]);
+                    if ($i < (count($file)-1)) {
+                        array_pop($formats[$i]);
+                    }
                     $i++;
                 } else {
                     $common->exception(3, "formatFile", true);
@@ -103,6 +104,8 @@ class Parser
                 }
                 $j++;
             }
+
+            var_dump($formatting);
             /*for ($i = 0; $i < )
                 $size = count($format);
                 for ($j = 1; $j < $size; $j++) {
