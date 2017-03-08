@@ -77,13 +77,7 @@
 
 			if ($files["outputFile"] != "stdout") {
 				if (!file_exists($files["outputFile"])) {
-					$this->exception(2, "file", true);
-				}
-			}
-
-			if ($files["formatFile"] != "none") {
-				if (!file_exists($files["formatFile"])) {
-					$this->exception(2, "file", true);
+				    unlink($files["outputFile"]);
 				}
 			}
 		}
@@ -120,17 +114,22 @@
 		/**
 		 *
 		 */
-		public function getFile($file)
+		public function getFile($file, $type)
 		{
-			if (!file_exists($file)) {
-				$this->exception(2, "file", true);
-			} else {
-				$ff = file($file);
-				if ($ff == false) {
-					$this->exception(2, "file", true);
-				}
-				return $ff;
-			}
+            if (!file_exists($file)) {
+                if ($type != "ff") {
+                    $this->exception(2, "file", true);
+                } else {
+                    $file = "stdin";
+                    return $file;
+                }
+            } else {
+                $ff = file($file);
+                if ($ff == false) {
+                    $this->exception(2, "file", true);
+                }
+                return $ff;
+            }
 			return false;
 		}
 

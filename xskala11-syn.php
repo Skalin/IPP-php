@@ -14,23 +14,30 @@
 	$argCount = count($argv);
 	$flags = array("if" => false, "of" => false, "ff" => false, "br" => false);
 	$files = array("inputFile" => "stdin", "outputFile" => "stdout", "formatFile" => "none");
-
 		// we will now check for arguments validity and then we'll check for integrity of all files
-		$common->checkArguments($argv);
 
-		// shortcuts for array access
-		$iFile = $files["inputFile"];
-		$oFile = $files["outputFile"];
-		$fFile = $files["formatFile"];
+        $common->checkArguments($argv);
 		// to speed up the process, we will call
+        // shortcuts for array access
+        $iFile = $files["inputFile"];
+        $oFile = $files["outputFile"];
+        $fFile = $files["formatFile"];
 
-		$parser->parseFormatFile($common, $fFile);
+		$format = $parser->parseFormatFile($common, $fFile);
 
-
-
-
+        $input = $common->getFile($iFile, "if");
+        $input = implode("", $input);
+        $output = $editor->editInputFile($common, $input, $format);
 		// script will insert <br /> tag at end of each line, the function itself checks the tag
-		$editor->insertNewLine($common, $oFile);
+		$output = $editor->insertNewLine($common, $output);
+
+		if ($files["outputFile"] == "stdout") {
+            $editor->writeToStdout($common, $output);
+        } else {
+		    $editor->writeToFile($common, $output, $oFile);
+        }
+
+
 
 		//var_dump($files);
         echo "-------------------------------------------------";
