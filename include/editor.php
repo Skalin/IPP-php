@@ -100,7 +100,7 @@ class Editor
 			foreach($rightTags as $index => $tags) {
 				$shift = 0;
 				$i = 0;
-
+				//todo: dodelat iterovani shiftu pro pravy tagy, nasledne uz jen provest tisk a opraveni regexu
 				while ($i <= (count($copyLeftTags)-1)) {
 					print_r(current($copyLeftTags));
 					array_shift(current($copyLeftTags));print_r(current($copyLeftTags));
