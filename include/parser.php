@@ -60,7 +60,7 @@ class Parser
 					$string = preg_replace("/(%d)/", "\d", $string);
 					$parsing = true;
 				} else if ((preg_match("/(%w)/", $string) == 1)) {
-					$string = preg_replace("/(%w)/", "\w", $string);
+					$string = preg_replace("/(%w)/", "a-zA-Z", $string);
 					$parsing = true;
 				} else if ((preg_match("/(%W)/", $string) == 1)) {
 					$string = preg_replace("/(%W)/", "\w|\d", $string);
@@ -98,9 +98,15 @@ class Parser
 				} else {
 					$common->exception(4, "", true);
 				}
-			} else if ((preg_match("/((!)([^\s]+))/", $string) == 1) && (preg_match("/((\\!)([^\s]+))/", $string) != 1)) {
-				$string = preg_replace("/((!)([^\s]+))/", "[^$3]", $string);
+			} else if ((preg_match("/\!./", $string, $matches, PREG_OFFSET_CAPTURE) == 1)) {
+				$string = preg_replace("/\!./", "[^\\" . substr($matches[0][0], 1, 1) . "]", $string);
+				echo "Regex: " . $string . "\n";
 				$parsing = true;
+			} else if ((preg_match("/\(.*\)/", $string, $matches, PREG_OFFSET_CAPTURE) == 1)) {
+				$string = preg_replace("/\(.*\)/", substr(substr($matches[0][0],1), 0, strlen(substr($matches[0][0],1))-1), $string);
+				echo "Regex: " . $string . "\n";
+				$parsing = true;
+
 			/*} else if ((preg_match("/([\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F])/", $string) == 1)) {
 				echo "samfin\n";
 				$common->exception(4, "", true);*/
@@ -132,6 +138,7 @@ class Parser
 			$preString = $preString."<u>";
 			$postString = "</u>".$postString;
 		} else if ((preg_match("/^(teletype)$/", $tag)) == 1) {
+			/** @noinspection HtmlDeprecatedTag */
 			$preString = $preString."<tt>";
 			$postString = "</tt>".$postString;
 		} else if (((preg_match("/^(color:[a-fA-F0-9]{6})$/", $tag)) == 1) || ((preg_match("/^(color:[a-fA-F0-9]{3})$/", $tag)) == 1)) {
@@ -157,8 +164,6 @@ class Parser
 	 * @param $formatFile
 	 */
 	public function parseFormatFile(Common $common, $formatFile) {
-
-		global $files;
 
 		if ($formatFile == "none") {
 			formatFile:
@@ -198,7 +203,11 @@ class Parser
 				$j++;
 			}
 
-			return $formatting;
+			if (isset($formatting)) {
+				return $formatting;
+			} else {
+				return array();
+			}
 		}
 	}
 }

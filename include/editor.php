@@ -35,7 +35,6 @@ class Editor
 	public function editInputFile($file, $formatting) {
 
 		echo "================KONEC VSTUPU===============\n";
-		$output = $file;
 		foreach ($formatting as $formKey => $form) {
 			$matches = array();
 			if ((preg_match_all("/" . $form[0] . "/", $file, $matches[$formKey], PREG_OFFSET_CAPTURE)) >= 0) {
@@ -43,7 +42,6 @@ class Editor
 				if (count($matches[$formKey][0]) > 0) {
 					foreach ($matches[$formKey] as $occur) {
 						$i = 0;
-						$output = "";
 						while (count($occur) > $i) {
 							$item = $occur[$i][0];
 							$offset = $occur[$i][1];
@@ -66,6 +64,8 @@ class Editor
 			}
 		}
 
+		$out = "";
+
 		if (isset($leftTags) && isset($rightTags)) {
 			ksort($leftTags);
 
@@ -75,6 +75,7 @@ class Editor
 				$cTags = $tags;
 				array_shift($cTags);
 				$tag = implode($cTags);
+				$lTags[$index] = array($tags[0],$tag);
 				$offset = $index - $prevIndex;
 				//echo "Index - prevIndex:". $prevIndex . " - ". $index ."\n";
 				$tmp = substr($file, 0, $offset);
@@ -87,63 +88,51 @@ class Editor
 
 			krsort($rightTags);
 
-			$copyLeftTags = $leftTags;
-
 			//print_r($rightTags);
 			foreach($rightTags as $key => $tags) {
+				$regex = $tags[0];
 				array_shift($tags);
-				$tag = implode($tags);
-				$rightTags[$key] = $tag;
+				$tagS = $tags;
+				$tag = implode($tagS);
+				//echo "TAG:".$tag."\n";
+				$rightTags[$key] = array($regex, $tag);
 			}
-			print_r($rightTags);
+			//print_r($rightTags);
 
-			foreach($rightTags as $index => $tags) {
-				$shift = 0;
-				$i = 0;
-				//todo: dodelat iterovani shiftu pro pravy tagy, nasledne uz jen provest tisk a opraveni regexu
-				while ($i <= (count($copyLeftTags)-1)) {
-					print_r(current($copyLeftTags));
-					array_shift(current($copyLeftTags));print_r(current($copyLeftTags));
-					sleep(3);
-					$i++;
-					next($copyLeftTags);
-				}
-				array_pop($copyLeftTags);
-			}
+			if (isset($lTags)) {
+				$copyLTags = $lTags;
 
-			foreach($rightTags as $index => $tags) {
-				$shift = 0;
-				$html = "";
-				//print_r($tags);
-				//print_r($index);
-				$i = 0;/*
-				while($i <= (count($copyLeftTags)-1)) {
-
-					print_r(current($copyLeftTags));
-					next($copyLeftTags);
-					$i++;
-				}
-				reset($copyLeftTags);
-				array_pop($copyLeftTags);*/
-/*
-				foreach($leftTags as $lIndex => $lTags) {
-
-					$cTags = $lTags;
-					array_shift($cTags);
-					$html = $tag = strlen(implode($cTags));
-					$shift += $tag;
+				foreach ($rightTags as $index => $tags) {
+					$shift = 0;
+					$i = 0;
+					while ($i <= (count($copyLTags) - 1)) {
+						$shift += strlen(current($copyLTags)[1]);
+						//echo $shift."\n";
+						next($copyLTags);
+						$i++;
+					}
+					//print_r($tags);
+					$right[$index + $shift] = $tags;
+					array_pop($copyLTags);
 				}
 
-				$shift += $index;
-				if (!isset($right[$shift])) {
-					$right[$shift] = array($tags[0],$html);
-				}*/
+				ksort($right);
+				$prevI = 0;
+				foreach ($right as $i => $key) {
+					//print_r($i);
+					//print_r($key);
+					$offset = $i - $prevI + strlen($right[$i][0]);
+					//echo "Delka slova: ".strlen($right[$i][0])."\n";
+					$tmp = substr($output, 0, $offset);
+					//cho "TMP: ".$tmp."\n";
+					$output = substr($output, strlen($tmp));
+					$out = $out . $tmp . $key[1];
+					$prevI = $i + strlen($right[$i][0]);
+				}
+				$out = $out . $output;
 			}
 		}
-
-		//print_r($right);
-
-		//print_r($rightTags);
+		$output = $out;
 		return $output;
 	}
 

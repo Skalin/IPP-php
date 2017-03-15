@@ -49,9 +49,9 @@
 
 		// we will now decide whether to print to stdout or to file passed in arguments
 		if ($files["outputFile"] == "stdout" && !$flags["of"]) {
-			//$editor->writeToStdout($output);
+			$editor->writeToStdout($output);
 		} else {
-			//$editor->writeToFile($output, $oFile);
+			$editor->writeToFile($output, $oFile);
 		}
 	return 0;
 
