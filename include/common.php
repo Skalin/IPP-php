@@ -7,6 +7,11 @@
  */
 class Common
 {
+	/*
+	 * Class Common
+	 * This class is containing basic functions that are used mainly in main script file and or in parser, or editor classes
+	 */
+
 	/**
 	 * The function checks for validity of all arguments, if the check fails, the function will exit script with code 1
 	 *
@@ -14,7 +19,9 @@ class Common
 	 */
 	public function checkArguments($argv) {
 
-		global $argCount, $flags, $files;
+		global $flags, $files;
+
+		$argCount = count($argv);
 
 		if ($argCount < 2) {
 			$this->exception(1, "amount", true);
@@ -69,9 +76,10 @@ class Common
 	}
 
 	/*
-	 * Function
+	 * Function checks for availability of all files, if input file is not valid, we will throw exception with exit(2)
+	 * if the output file already exists, we will unlink it (delete it) just to be sure..
 	 *
-	 * @param $files
+	 * @param array $files Array of files that is being validated
 	 */
 	public function checkAllFiles($files) {
 
@@ -90,56 +98,55 @@ class Common
 	}
 
 	/**
-	 * Function for calling exceptions and stopping the script
+	 * Function for throwing exceptions and stopping the script
 	 *
-	 * @param $errorCode Int selecting type of error
-	 * @param $errorText String Depending on this value function selects which type i will echo
-	 * @param $echo Bool value selects whether to echo error or not.
+	 * @param int $errorCode selector of type of error
+	 * @param string $errorText Depending on this value function selects which type i will echo
+	 * @param bool $echo value selects whether to echo error or not.
 	 */
 	public function exception($errorCode, $errorText, $echo) {
 
-		global $fileName, $files, $flags;
+		global $fileName;
 
 		if ($echo == true) {
 
 			fwrite(STDERR, "ERROR: ");
 			if ($errorText == "combination") {
-				fwrite(STDERR,"Wrong combination of parameters!");
+				fwrite(STDERR,"Wrong combination of parameters! ");
 			} else if ($errorText == "amount") {
-				fwrite(STDERR,"Wrong amount of arguments passed!");
+				fwrite(STDERR,"Wrong amount of arguments passed! ");
 			} else if ($errorText == "file") {
-				fwrite(STDERR,"Couldn't open or missing file!");
+				fwrite(STDERR,"Couldn't open or missing file! ");
 			} else if ($errorText == "formatFile") {
-				fwrite(STDERR,"Wrong format of the formatting file!");
+				fwrite(STDERR,"Wrong format of the formatting file! ");
 			} else if ($errorText == "utf") {
-				fwrite(STDERR,"Wrong format of the input file!");
+				fwrite(STDERR,"Wrong format of the input file! ");
 			}
-			fwrite(STDERR," Use: " . $fileName . " --help\n");
+			fwrite(STDERR,"Use: " . $fileName . " --help\n");
 		}
-		//var_dump($flags);
-		//var_dump($files);
 		exit($errorCode);
 	}
 
 
 	/**
-	 * Function
+	 * Function opens the format file and loads it into array of lines
 	 *
-	 * @param $file
-	 * @param $type
+	 * @param string $file Name of the formatting file
+	 * @param string $type Type of the formatting file
 	 */
 	public function getFormatFile($file, $type) {
 
+		// this function was in the past used also for input and output files, later on it was reworked and used only for format files, could be revisioned and shortened..
 		if (!file_exists($file)) {
 			if ($type != "ff") {
 				$this->exception(2, "file", true);
 			} else {
-				$file = "stdin";
+				$file = "stdin"; // just a "help variable" that will be probably never used until somebody will create stdin file (probably won't happen
 				return $file;
 			}
 		} else {
 			$ff = file($file);
-			if ($ff == false) {
+			if ($ff === false) {
 				$this->exception(2, "file", true);
 			}
 			return $ff;
@@ -148,7 +155,9 @@ class Common
 	}
 
 	/**
+	 * Function for fileClosing and checking for correct file closing
 	 *
+	 * @param resource $file Name of the file to be closed
 	 */
 	public function closeFile($file) {
 
@@ -158,7 +167,7 @@ class Common
 	}
 
 	/**
-	 * Function
+	 * Function that should be called only with --help arguments, prints help
 	 *
 	 */
 	public function printHelp() {

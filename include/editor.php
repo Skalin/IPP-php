@@ -11,13 +11,11 @@ class Editor
 
 	/**
 	 * Function checks for --br tag, if it is passed, the function will insert </br> tag at end of each line
-	 * @param Common $common
-	 * @param $outputFile
-	 * @return 0 if no new line was inserted due to some limitations of arguments, otherwise returns the whole file
+	 *
+	 * @param string $file file that was converted into string
+	 * @return string $file Formatted file that is modified if br tag is passed, otherwise returns unchanged file, returned as string
 	 */
-	public function insertNewLine($file) {
-
-		global $flags;
+	public function insertNewLine($flags, $file) {
 
 		if ($flags["br"]) {
 			return $br = implode("<br />\n", $br = explode("\n", $file));
@@ -27,14 +25,14 @@ class Editor
 	}
 
 	/*
-	 * Function
+	 * Function loads the input file in format of string and array of formats in $formatting, after that, all of the matches for all regular expressions are found and saved into array, after that, concatenation of HTML tag from left side and right side is done
 	 *
-	 * @param $file
-	 * @param $formatting
+	 * @param string $file File previously converted into string
+	 * @param array $formatting Array of all regular expressions and html tags
+	 * @return string $output If formatting was done, functions returns modified $file string, otherwise the $file is returned directly from passed argument
 	 */
 	public function editInputFile($file, $formatting) {
 
-		echo "================KONEC VSTUPU===============\n";
 		foreach ($formatting as $formKey => $form) {
 			$matches = array();
 			if ((preg_match_all("/" . $form[0] . "/", $file, $matches[$formKey], PREG_OFFSET_CAPTURE)) >= 0) {
@@ -66,9 +64,12 @@ class Editor
 
 		$out = "";
 
+		// if everything was created properly
 		if (isset($leftTags) && isset($rightTags)) {
+			// we will sort left array by key indexes
 			ksort($leftTags);
 
+			// and we will concatenate left pair of HTML tags to the input
 			$prevIndex = 0;
 			$output = "";
 			foreach($leftTags as $index => $tags) {
@@ -77,54 +78,48 @@ class Editor
 				$tag = implode($cTags);
 				$lTags[$index] = array($tags[0],$tag);
 				$offset = $index - $prevIndex;
-				//echo "Index - prevIndex:". $prevIndex . " - ". $index ."\n";
 				$tmp = substr($file, 0, $offset);
-				//echo $tmp."\n";
 				$file = substr($file, strlen($tmp));
 				$output = $output.$tmp.$tag;
 				$prevIndex = $index;
 			}
 			$output = $output.$file;
 
+			// we will sort right side from the biggest key to the smalles
 			krsort($rightTags);
 
-			//print_r($rightTags);
+			// and we will implode all rightside html tags
 			foreach($rightTags as $key => $tags) {
 				$regex = $tags[0];
 				array_shift($tags);
 				$tagS = $tags;
 				$tag = implode($tagS);
-				//echo "TAG:".$tag."\n";
 				$rightTags[$key] = array($regex, $tag);
 			}
-			//print_r($rightTags);
 
+			// again we will check for correct creation of array
 			if (isset($lTags)) {
 				$copyLTags = $lTags;
 
+				// we will shift all keys by the size of left html tags that were included before certain regular expressions
 				foreach ($rightTags as $index => $tags) {
 					$shift = 0;
 					$i = 0;
 					while ($i <= (count($copyLTags) - 1)) {
 						$shift += strlen(current($copyLTags)[1]);
-						//echo $shift."\n";
 						next($copyLTags);
 						$i++;
 					}
-					//print_r($tags);
 					$right[$index + $shift] = $tags;
 					array_pop($copyLTags);
 				}
 
+				// we will resort it again and concatenate right side of html pairs
 				ksort($right);
 				$prevI = 0;
 				foreach ($right as $i => $key) {
-					//print_r($i);
-					//print_r($key);
 					$offset = $i - $prevI + strlen($right[$i][0]);
-					//echo "Delka slova: ".strlen($right[$i][0])."\n";
 					$tmp = substr($output, 0, $offset);
-					//cho "TMP: ".$tmp."\n";
 					$output = substr($output, strlen($tmp));
 					$out = $out . $tmp . $key[1];
 					$prevI = $i + strlen($right[$i][0]);
@@ -133,11 +128,15 @@ class Editor
 			}
 		}
 		$output = $out;
+
+		// and it's done!
 		return $output;
 	}
 
 	/*
-	 * Function
+	 * Function is reading the text from STDIN when argument --input= is not passed to script
+	 *
+	 * @return string $input Text from STDIN is converted into string and returned, if no chars were read, function returns blank string
 	 */
 	public function readFromStdinToInput() {
 
@@ -151,25 +150,28 @@ class Editor
 	}
 
 	/*
-	 * Function
+	 * Function reads text from $file, only called when --input= argument is passed.
 	 *
-	 *
+	 * @param string $file string containing all lines of file is returned, otherwise blank string is returned
 	 */
-	public function readFromFileToInput($file) {
-		$fp = fopen($file,"r");
+	public function readFromFileToInput(Common $common, $file) {
 		$input = "";
-		while (($line = fgets($fp)) !== false) {
-			$input = $input.$line;
+		if (($fp = fopen($file,"r")) !== false) {
+			while (($line = fgets($fp)) !== false) {
+				$input = $input.$line;
+			}
+		} else {
+			$common->exception(2, "file", true);
 		}
 
 		return $input;
 	}
 
 	/*
-	 * Function
+	 * Function checks for encoding of the file, it is not currently used in this version
 	 *
-	 * @param $common
-	 * @param $file
+	 * @param Class $common Class that is called for exceptions
+	 * @param file $file Filename that is passed to the script
 	 */
 	public function checkEncoding(Common $common, $file) {
 
@@ -180,23 +182,26 @@ class Editor
 	}
 
 	/*
-	 * Function
+	 * Function writes the $file string to the output file specified in $oFile, only called when output file is specified
 	 *
-	 * @param $file
-	 * @param $oFile
+	 * @param string $file Modified file converted into string
+	 * @param file $oFile Name of the output file
 	 */
-	public function writeToFile($file, $oFile) {
+	public function writeToFile(Common $common, $file, $oFile) {
 
-		$filePointer = fopen($oFile, "w+");
-		fwrite($filePointer, '');
-		fwrite($filePointer, $file);
-		fclose($filePointer);
+		if (($filePointer = @fopen($oFile, "w+")) !== false) {
+			fwrite($filePointer, '');
+			fwrite($filePointer, $file);
+			fclose($filePointer);
+		} else {
+			$common->exception(3,"file", true);
+		}
 	}
 
 	/*
-	 * Function
+	 * Function writes the modified formatted file converted into string to the stdout, only called when no output file is specified
 	 *
-	 * @param $file
+	 * @param string $file formatted file converted into string
 	 */
 	public function writeToStdout($file) {
 

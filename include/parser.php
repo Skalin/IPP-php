@@ -8,29 +8,38 @@
  */
 class Parser
 {
+	/*
+	 * Class Parser
+	 * This class contains several functions that are only used for parsing the file and checking regexes..
+	 */
+
 	/**
 	 * Function checks for validity of regex, if regex is not valid, the function will return error, otherwise it will continue normally
+	 * If the regex is invalid, exception is called, otherwise it does nothing
 	 *
-	 * @param $common
+	 * @param Common $common We are using this class to call for exceptions
 	 * @param $string
 	 */
 	private function regexChecker(Common $common, $string) {
 
 		$regex = '/'.$string.'/';
+		echo $regex."\n";
 		if ((@preg_match($regex, "Test")) === false) {
 			$common->exception(3, "formatFile", true);
 		}
+
 	}
 
 	/**
-	 * Function
+	 * Function replaces all formatting with valid PCRE formatting, after everything that should be replaced is replaced, the function checks for validity of REGEX
 	 *
-	 * @param $common
-	 * @param $string
+	 * @param Common $common We are using this class to call for exceptions
+	 * @param $string String that will be parsed/replaced/validated
 	 */
 	protected function parseRegex(Common $common, $string) {
 
 		$parsing = true;
+		$slashes = true;
 		while ($parsing == true) {
 			$parsing = false;
 			if ((preg_match("/(!!)/", $string) == 1)) {
@@ -40,6 +49,8 @@ class Parser
 				$string = preg_replace("/(\*\*)/", "*", $string);
 				$parsing = true;
 			} else if ((preg_match("/((^\.\.)|([^%]\.\.))/", $string) == 1)) {
+				$common->exception(4, "", true);
+			}else if ((preg_match("/([^\S]\.)/", $string) == 1)) {
 				$common->exception(4, "", true);
 			} else if ((preg_match("/((^\|\|)|([^%]\|\|))/", $string) == 1)) {
 				$common->exception(4, "", true);
@@ -59,17 +70,23 @@ class Parser
 				} else if ((preg_match("/(%d)/", $string) == 1)) {
 					$string = preg_replace("/(%d)/", "\d", $string);
 					$parsing = true;
+				}  else if ((preg_match("/(%l)/", $string) == 1)) {
+					$string = preg_replace("/(%l)/", "[a-z]", $string);
+					$parsing = true;
+				}  else if ((preg_match("/(%L)/", $string) == 1)) {
+					$string = preg_replace("/(%L)/", "[A-Z]", $string);
+					$parsing = true;
 				} else if ((preg_match("/(%w)/", $string) == 1)) {
-					$string = preg_replace("/(%w)/", "a-zA-Z", $string);
+					$string = preg_replace("/(%w)/", "[a-zA-Z]", $string);
 					$parsing = true;
 				} else if ((preg_match("/(%W)/", $string) == 1)) {
-					$string = preg_replace("/(%W)/", "\w|\d", $string);
+					$string = preg_replace("/(%W)/", "[a-zA-Z\d]", $string);
 					$parsing = true;
 				} else if ((preg_match("/(%t)/", $string) == 1)) {
-					$string = preg_replace("/(%t)/", "\t", $string);
+					$string = preg_replace("/(%t)/", "\\t", $string);
 					$parsing = true;
 				} else if ((preg_match("/(%n)/", $string) == 1)) {
-					$string = preg_replace("/(%n)/", "\n", $string);
+					$string = preg_replace("/(%n)/", "\\n", $string);
 					$parsing = true;
 				} else if ((preg_match("/(%\|)/", $string) == 1)) {
 					$string = preg_replace("/(%\|)/", "\|", $string);
@@ -98,21 +115,26 @@ class Parser
 				} else {
 					$common->exception(4, "", true);
 				}
-			} else if ((preg_match("/\!./", $string, $matches, PREG_OFFSET_CAPTURE) == 1)) {
+			} else if ((preg_match("/\//", $string, $matches, PREG_OFFSET_CAPTURE) == 1) && $slashes) {
+				$string = preg_replace("/\//", "\/", $string);
+				$parsing = true;
+				$slashes = false;
+			}/* else if ((preg_match("/\!../", $string, $matches, PREG_OFFSET_CAPTURE) == 1)) {
+				$string = preg_replace("/\!../", "[^\\" . substr($matches[0][0], 1, 2) . "]", $string);
+				$parsing = true;
+			}*/ else if ((preg_match("/\!./", $string, $matches, PREG_OFFSET_CAPTURE) == 1)) {
 				$string = preg_replace("/\!./", "[^\\" . substr($matches[0][0], 1, 1) . "]", $string);
-				echo "Regex: " . $string . "\n";
 				$parsing = true;
 			} else if ((preg_match("/\(.*\)/", $string, $matches, PREG_OFFSET_CAPTURE) == 1)) {
 				$string = preg_replace("/\(.*\)/", substr(substr($matches[0][0],1), 0, strlen(substr($matches[0][0],1))-1), $string);
-				echo "Regex: " . $string . "\n";
 				$parsing = true;
 
-			/*} else if ((preg_match("/([\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F])/", $string) == 1)) {
-				echo "samfin\n";
-				$common->exception(4, "", true);*/
+			//} else if ((preg_match("/([\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F])/", $string) == 1)) {
+				//$common->exception(4, "", true);
 			}
 
 		}
+
 
 		$this->regexChecker($common, $string);
 
@@ -120,12 +142,12 @@ class Parser
 	}
 
 	/**
-	 * Function
+	 * Function is concatenating html tags to $preString and $postString which are strings of html tags
 	 *
-	 * @param $common
-	 * @param $tag
-	 * @param $preString
-	 * @param $postString
+	 * @param Common $common We are using this class to call for exceptions
+	 * @param $tag String we will concatenate correct html tag depending of this value
+	 * @param $preString String containing all html tags that should be before certain regex
+	 * @param $postString String containing all html tags that should be after certain regex
 	 */
 	private function parseTag(Common $common, $tag, $preString, $postString) {
 		if ((preg_match("/^(bold)$/", $tag)) == 1) {
@@ -158,15 +180,15 @@ class Parser
 	}
 
 	/**
-	 * Function
+	 * Function looks for $formatFile, if the format file is missing, formatting is skipped otherwise validity of formatting file is checked and then it is correctly parsed
 	 *
-	 * @param $common
-	 * @param $formatFile
+	 * @param Common $common We are using this class to call exceptions or other functions outside of function and outside of this file
+	 * @param file::$formatFile File containing all formatting
+	 * @return array 2D array of formatting
 	 */
 	public function parseFormatFile(Common $common, $formatFile) {
 
 		if ($formatFile == "none") {
-			formatFile:
 			//we will return input file, when the format file is not included
 			$formatting = array();
 			return $formatting;
@@ -175,12 +197,13 @@ class Parser
 			$formats = array();
 			$file = $common->getFormatFile($formatFile, "ff");
 			if ($file == "stdin") {
-				goto formatFile;
+				return array();
 			}
 
+			// this foreach should do the correct splitting of format file
 			$i = 0;
 			foreach ($file as $line) {
-				if ((preg_match("/([\w\d\"\.\|\!\%\*\+\(\)]+[\t]+[\w\d,: \t]+)$/", $line)) == 1) {
+				if ((preg_match("/([\S\s\"]+[\t]+[\w\d,: \t]+)$/", $line)) == 1) {
 					$formats[$i] = preg_split("/([,\s]+)/", $line);
 					if ($i < (count($file) - 1) || $formats[$i][count($formats[$i]) - 1] == "") {
 						array_pop($formats[$i]);
@@ -192,6 +215,7 @@ class Parser
 			}
 
 
+			// array of formats will be filled with correct regular expressions and tags
 			$j = 0;
 			foreach ($formats as $format) {
 				$formatting[$j][0] = $this->parseRegex($common, $format[0]);

@@ -15,7 +15,6 @@
 	$parser = new Parser;
 	$editor = new Editor;
 	$fileName = $argv[0];
-	$argCount = count($argv);
 	$flags = array("if" => false, "of" => false, "ff" => false, "br" => false);
 	$files = array("inputFile" => "stdin", "outputFile" => "stdout", "formatFile" => "none");
 
@@ -34,25 +33,27 @@
 		if (!$flags["if"] && $files["inputFile"] == "stdin") {
 			$input = $editor->readFromStdinToInput();
 		} else {
-			$input = $editor->readFromFileToInput($iFile);
+			$input = $editor->readFromFileToInput($common, $iFile);
 		}
 
-		// $input is being formatted into $output using formatting file
-		if ($flags["ff"] != false && "formatFile" != "none") {
-			$output = $editor->editInputFile($input, $format);
-		} else {
-			$output = $input;
-		}
-		// script will insert <br /> tag at end of each line, the function itself checks the tag
-		$output = $editor->insertNewLine($output);
+
+			// $input is being formatted into $output using formatting file
+			if ($flags["ff"] != false && "formatFile" != "none") {
+				$output = $editor->editInputFile($input, $format);
+			} else {
+				$output = $input;
+			}
+			// script will insert <br /> tag at end of each line, the function itself checks the tag
+			$output = $editor->insertNewLine($flags, $output);
 
 
 		// we will now decide whether to print to stdout or to file passed in arguments
 		if ($files["outputFile"] == "stdout" && !$flags["of"]) {
 			$editor->writeToStdout($output);
 		} else {
-			$editor->writeToFile($output, $oFile);
+			$editor->writeToFile($common, $output, $oFile);
 		}
-	return 0;
+
+		return 0;
 
 ?>
